@@ -1,0 +1,12 @@
+{ "name":"jwscenes",
+  "email":"gsmiro@gmail.com",
+  "url":"https://github.com/gsmiro",
+  "repository" :
+  { "type" : "git",
+    "url" : "http://github.com/gsmiro/jwscenes.git"
+  },
+  "dependencies":{
+    "htmlparser2":">=3.8.2",	   
+    "request":">=2.53.0"
+  }
+}
