@@ -70,12 +70,26 @@ function main(args) {
                     if (attr.class && attr.class.indexOf('jsImgDescr') > -1) {
                       this.divcount = this.divcount + 1
                       if(!results[this.curr]['info']){
-                        results[this.curr]['info'] = {}
+                        results[this.curr]['info'] = {
+                            'title':{},
+                            'facts':{},
+                            'population':{},
+                            'ministers':{},
+                            'congregations':{},
+                            'ratio':{}
+                          }
                         //console.log(this.url + ' Init info %s %s', this.divcount,this.curr)
                       }
                     } else if (this.divcount) {
                       this.divcount = this.divcount + 1
                       //console.log(this.url + ' Found div ' + this.divcount)
+                    }
+                  }
+                  if(this.divcount){
+                    this.title = this.title || name === 'h2'
+                    this.facts = this.facts || name === 'h3'
+                    if(name === 'li'){
+                      this.factsData = this.factsData + 1
                     }
                   }
                 },
@@ -84,22 +98,39 @@ function main(args) {
                     if (name === 'div') {
                       //console.log(this.url + ' Closed div ' + this.divcount)
                       this.divcount = this.divcount - 1
-                    }
+                    } else if(this.title && name === 'h2')this.title = false
+                    else if(this.facts && name === 'h3')this.facts = false
+                    else if(this.factsData == 4 && name === 'li') this.factsData = 0
                   }
                 },
                 ontext: function(text) {
                   text = text.trim()
                   text = text.replace(/.*\\n.*/, '')
                   if (this.divcount) {
-                    //console.log('%s %s %s',this.url,this.curr, text)
-                    if(text.length)
-                      results[this.curr].info[text]=true
+                    if(text.length){
+                        var sel = ''
+                        switch(this.factsData){
+                          case 1: sel = 'population';break;
+                          case 2: sel = 'ministers';break;
+                          case 3: sel = 'congregations';break;
+                          case 4: sel = 'ratio';break;
+                          default:
+                            if(this.facts)sel = 'facts'
+                            else if(this.title) sel ='title'
+                        }
+                        if(sel.length){
+                          results[this.curr].info[sel][text] = true
+                        }
+                    }
                   }
                 }
               });
               pageparser.prop('divcount', 0)
               pageparser.prop('curr', "")
               pageparser.prop('url', url)
+              pageparser.prop('title',false)
+              pageparser.prop('facts',false)
+              pageparser.prop('factsData',0)
               req.get(url)
                 .on('error', function(err) {
                   console.log(err)
@@ -108,7 +139,9 @@ function main(args) {
                 }).on('end', function() {
                   pageparser.end();
                   if (idx == arr.length - 1) {
-                    console.log(results)
+                    for(var a in results){
+                      console.log(results[a])
+                    }
                   }
                 });
             })
