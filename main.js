@@ -153,6 +153,7 @@ function parsePages(urls,end){
     pageparser.prop('facts',false)
     pageparser.prop('factsData',0)
     pageparser.prop('url',url)
+
     req.get(url)
       .on('error', function(err) {
         console.log(err)
@@ -194,31 +195,38 @@ function set(o,map){
   for(var i in o)set.push(map?map(i,o[i]):i)
   return set;
 }
-parseUrls(process.argv.slice(4),process.argv[2],process.argv[3],function(arr){
-  parsePages(arr,function(o){
-    o = set(o,function(idx,it){
-      it._id = idx
-      for(var info in it.info){
-        it.info[info] = set(it.info[info])
-      }
-      return it;
-    });
-    console.log(o)
- 
-    connect('jwscenes',function(mongo){
-      var jw = mongo.collection('jwscenes');
-       jw.insert(o,function(err,res){
-        console.log(arguments)
-        try{
-          if(err){
-            console.log(err)
-            throw err
-          }
-          console.log(res)
-        }finally{
-          mongo.close()
-        }
-      })
-    })
+connect('jwscenes',function(mongo){
+  var jw = mongo.collection('jwscenes')
+  console.log(jw.find().toArray(function(err,docs){
+    if(!docs.length){
+        parseUrls(process.argv.slice(4),process.argv[2],process.argv[3],function(arr){
+        parsePages(arr,
+        function(o){
+          o = set(o,function(idx,it){
+            it._id = idx
+            for(var info in it.info){
+              it.info[info] = set(it.info[info])
+            }
+            return it;
+          });
+          console.log(o)
+       
+          var jw = mongo.collection('jwscenes');
+          jw.insert(o,function(err,res){
+            console.log(arguments)
+            try{
+              if(err){
+                console.log(err)
+                throw err
+              }
+              console.log(res)
+            }finally{
+              mongo.close()
+            }
+          })
+        })
+      });
+    }
   })
-});
+  mongo.close();
+})
